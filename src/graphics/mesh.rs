@@ -133,7 +133,46 @@ impl MeshBuilder {
         }
         self
     }
+    
+    ///Create a new mesh for an arc.
 
+    pub fn arc<P>(
+        &mut self,
+        mode: DrawMode,
+        point: P,
+        radius: f32,
+        rotation: f32,
+        angle: f32,
+        tolerance: f32,
+        color: Color
+    
+    ) -> &mut Self 
+    where
+        P: Into<mint::Point2<f32>>,{
+        let point = point.into();
+        let buffers = &mut self.buffer;
+        let vb = VertexBuilder {
+            color: LinearColor::from(color),
+        };
+        match mode {
+            DrawMode::Fill(fill_options) => {
+                let builder = &mut t::BuffersBuilder::new(buffers, vb);
+                let _ = t::basic_shapes::fill_arc(
+                    t::math::point(point.x, point.y),
+                    radius,
+                    t::math::Angle {radians: rotation},
+                    t::math::Angle {radians: angle},
+                    &fill_options.with_tolerance(tolerance),
+                    builder
+                );
+            }
+            DrawMode::Stroke(options) => {
+               unimplemented!()
+            }
+        };   
+        self
+    }
+    
     /// Create a new mesh for an ellipse.
     ///
     /// For the meaning of the `tolerance` parameter, [see here](https://docs.rs/lyon_geom/0.11.0/lyon_geom/#flattening).
@@ -451,7 +490,27 @@ impl Mesh {
         let _ = mb.circle(mode, point, radius, tolerance, color);
         mb.build(ctx)
     }
+    
+    /// Create a new mesh for an arc
+    pub fn new_arc<P>(
+        ctx: &mut Context,
+        mode: DrawMode,
+        point: P,
+        radius: f32,
+        rotation: f32,
+        angle: f32,
+        tolerance: f32,
+        color: Color,
 
+    ) -> GameResult<Mesh>
+    where
+        P: Into<mint::Point2<f32>>,
+    {
+        let mut mb = MeshBuilder::new();
+        let _ = mb.arc(mode, point, radius, rotation, angle, tolerance, color);
+        mb.build(ctx)
+    }
+    
     /// Create a new mesh for an ellipse.
     pub fn new_ellipse<P>(
         ctx: &mut Context,
